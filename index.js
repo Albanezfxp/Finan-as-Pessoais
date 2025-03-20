@@ -49,16 +49,13 @@ function createDeleteTransactionBtn(id) {
   const deleteBtn = document.createElement("button");
   deleteBtn.classList.add("delete-btn");
   deleteBtn.textContent = "Excluir";
-  deleteBtn.addEventListener("click", async () => {
-    await fetch(`http://localhost:3000/transactions/${id}`, {
-      method: "DELETE",
-    });
-    deleteBtn.parentElement.remove();
+  deleteBtn.addEventListener("click", () => {
     const indexToRemove = transactions.findIndex((t) => t.id === id);
     transactions.splice(indexToRemove, 1);
+    deleteBtn.parentElement.remove();
     updateBalance();
+    saveToLocalStorage();
   });
-
   return deleteBtn;
 }
 
@@ -72,7 +69,7 @@ function renderTransaction(transaction) {
   document.querySelector("#transactions").append(container);
 }
 
-async function saveTransaction(ev) {
+function saveTransaction(ev) {
   ev.preventDefault();
 
   const id = document.querySelector("#id").value;
@@ -80,40 +77,20 @@ async function saveTransaction(ev) {
   const amount = parseFloat(document.querySelector("#amount").value);
 
   if (id) {
-    const response = await fetch(`http://localhost:3000/transactions/${id}`, {
-      method: "PUT",
-      body: JSON.stringify({ name, amount }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const transaction = await response.json();
-    const indexToRemove = transactions.findIndex((t) => t.id === parseInt(id));
-    transactions.splice(indexToRemove, 1, transaction);
+    const indexToUpdate = transactions.findIndex((t) => t.id === parseInt(id));
+    transactions[indexToUpdate] = { ...transactions[indexToUpdate], name, amount };
     document.querySelector(`#transaction-${id}`).remove();
-    renderTransaction(transaction);
+    renderTransaction(transactions[indexToUpdate]);
   } else {
-    const response = await fetch("http://localhost:3000/transactions", {
-      method: "POST",
-      body: JSON.stringify({ name, amount }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const transaction = await response.json();
+    const newId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1;
+    const transaction = { id: newId, name, amount };
     transactions.push(transaction);
     renderTransaction(transaction);
   }
 
   ev.target.reset();
   updateBalance();
-}
-
-async function fetchTransactions() {
-  return await fetch("http://localhost:3000/transactions").then((res) =>
-    res.json()
-  );
+  saveToLocalStorage();
 }
 
 function updateBalance() {
@@ -130,9 +107,30 @@ function updateBalance() {
   balanceSpan.textContent = formater.format(balance);
 }
 
+function saveToLocalStorage() {
+  localStorage.setItem('transactions', JSON.stringify(transactions));
+}
+
+function loadFromLocalStorage() {
+  const savedTransactions = localStorage.getItem('transactions');
+  if (savedTransactions) {
+    transactions = JSON.parse(savedTransactions);
+    return true;
+  }
+  return false;
+}
+
 async function setup() {
-  const results = await fetchTransactions();
-  transactions.push(...results);
+  if (!loadFromLocalStorage()) {
+    try {
+      const response = await fetch('./db.json');
+      const data = await response.json();
+      transactions = data.transactions;
+      saveToLocalStorage();
+    } catch (error) {
+      console.error('Erro ao carregar dados iniciais:', error);
+    }
+  }
   transactions.forEach(renderTransaction);
   updateBalance();
 }
