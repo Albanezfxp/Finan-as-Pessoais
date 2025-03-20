@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Sistema de finanças pessoais para controle de receitas e despesas" />
+    <meta name="theme-color" content="#1c1a1d" />
     <link
       rel="stylesheet"
       href="./style.css"
@@ -13,20 +15,23 @@
   <body>
     <h1>Minhas Finanças</h1>
     <main>
-      <form>
+      <form id="transaction-form" aria-label="Formulário de transação">
         <h2>Nova Transação</h2>
         <input type="hidden" id="id" name="id" />
-        <label for="name">Nome:</label>
-        <input type="text" id="name" name="name" />
-        <label for="amount">Valor:</label>
-        <input type="number" step="0.01" id="amount" name="amount" />
-        <br /><br />
-        <button>Salvar</button>
+        <div class="form-group">
+          <label for="name">Nome:</label>
+          <input type="text" id="name" name="name" required placeholder="Digite o nome da transação" />
+        </div>
+        <div class="form-group">
+          <label for="amount">Valor:</label>
+          <input type="number" step="0.01" id="amount" name="amount" required placeholder="Digite o valor" />
+        </div>
+        <button type="submit">Salvar</button>
       </form>
-      <div>
-        <h2>Saldo: <span id="balance"></span></h2>
+      <div class="transactions-container">
+        <h2>Saldo: <span id="balance">R$ 0,00</span></h2>
         <h2>Histórico de Transações</h2>
-        <section id="transactions"></section>
+        <section id="transactions" aria-label="Lista de transações"></section>
       </div>
     </main>
 
